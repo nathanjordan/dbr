@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
-type mysql struct{}
+// clickhouse dialect is based on mysql dialect, but using
+// [...] to represent array instead of (...).
+type clickhouse mysql
 
-func (d mysql) QuoteIdent(s string) string {
+func (d clickhouse) QuoteIdent(s string) string {
 	return quoteIdent(s, "`")
 }
 
-func (d mysql) EncodeString(s string) string {
+func (d clickhouse) EncodeString(s string) string {
 	var buf strings.Builder
 
 	buf.WriteRune('\'')
@@ -46,29 +48,29 @@ func (d mysql) EncodeString(s string) string {
 	return buf.String()
 }
 
-func (d mysql) EncodeBool(b bool) string {
+func (d clickhouse) EncodeBool(b bool) string {
 	if b {
 		return "1"
 	}
 	return "0"
 }
 
-func (d mysql) EncodeTime(t time.Time) string {
+func (d clickhouse) EncodeTime(t time.Time) string {
 	return `'` + t.UTC().Format(timeFormat) + `'`
 }
 
-func (d mysql) EncodeBytes(b []byte) string {
+func (d clickhouse) EncodeBytes(b []byte) string {
 	return fmt.Sprintf(`0x%x`, b)
 }
 
-func (d mysql) EncodeArrayBegin() string {
-	return "("
+func (d clickhouse) EncodeArrayBegin() string {
+	return "["
 }
 
-func (d mysql) EncodeArrayEnd() string {
-	return ")"
+func (d clickhouse) EncodeArrayEnd() string {
+	return "]"
 }
 
-func (d mysql) Placeholder(_ int) string {
+func (d clickhouse) Placeholder(_ int) string {
 	return "?"
 }

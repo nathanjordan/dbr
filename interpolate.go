@@ -164,7 +164,7 @@ func (i *interpolator) encodePlaceholder(value interface{}, topLevel bool) error
 			// FIXME: support zero-length slice
 			return ErrInvalidSliceLength
 		}
-		i.WriteString("(")
+		i.WriteString(i.EncodeArrayBegin())
 		for n := 0; n < v.Len(); n++ {
 			if n > 0 {
 				i.WriteString(",")
@@ -174,7 +174,7 @@ func (i *interpolator) encodePlaceholder(value interface{}, topLevel bool) error
 				return err
 			}
 		}
-		i.WriteString(")")
+		i.WriteString(i.EncodeArrayEnd())
 		return nil
 	case reflect.Ptr:
 		if v.IsNil() {

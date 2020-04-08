@@ -35,6 +35,14 @@ func (d sqlite3) EncodeBytes(b []byte) string {
 	return fmt.Sprintf(`X'%x'`, b)
 }
 
+func (d sqlite3) EncodeArrayBegin() string {
+	return "("
+}
+
+func (d sqlite3) EncodeArrayEnd() string {
+	return ")"
+}
+
 func (d sqlite3) Placeholder(_ int) string {
 	return "?"
 }

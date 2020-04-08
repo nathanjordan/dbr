@@ -55,7 +55,7 @@ func TestInterpolateIgnoreBinary(t *testing.T) {
 	}
 }
 
-func TestInterpolateForDialect(t *testing.T) {
+func TestInterpolateForMySQLDialect(t *testing.T) {
 	for _, test := range []struct {
 		query string
 		value []interface{}
@@ -152,6 +152,105 @@ func TestInterpolateForDialect(t *testing.T) {
 		require.Equal(t, test.want, s)
 	}
 }
+
+func TestInterpolateForClickHouseDialect(t *testing.T) {
+	for _, test := range []struct {
+		query string
+		value []interface{}
+		want  string
+	}{
+		{
+			query: "?",
+			value: []interface{}{nil},
+			want:  "NULL",
+		},
+		{
+			query: "?",
+			value: []interface{}{`'"'"`},
+			want:  "'\\'\\\"\\'\\\"'",
+		},
+		{
+			query: "? ?",
+			value: []interface{}{true, false},
+			want:  "1 0",
+		},
+		{
+			query: "? ?",
+			value: []interface{}{1, 1.23},
+			want:  "1 1.23",
+		},
+		{
+			query: "?",
+			value: []interface{}{time.Date(2008, 9, 17, 20, 4, 26, 123456000, time.UTC)},
+			want:  "'2008-09-17 20:04:26.123456'",
+		},
+		{
+			query: "?",
+			value: []interface{}{[]string{"one", "two"}},
+			want:  "['one','two']", // ClickHouse use [...] for array value.
+		},
+		{
+			query: "?",
+			value: []interface{}{[]byte{0x1, 0x2, 0x3}},
+			want:  "0x010203",
+		},
+		{
+			query: "start?end",
+			value: []interface{}{new(int)},
+			want:  "start0end",
+		},
+		{
+			query: "?",
+			value: []interface{}{Select("a").From("table")},
+			want:  "SELECT a FROM table",
+		},
+		{
+			query: "?",
+			value: []interface{}{I("a1").As("a2")},
+			want:  "`a1` AS `a2`",
+		},
+		{
+			query: "?",
+			value: []interface{}{Select("a").From("table").As("a1")},
+			want:  "(SELECT a FROM table) AS `a1`",
+		},
+		{
+			query: "?",
+			value: []interface{}{
+				UnionAll(
+					Select("a").From("table1"),
+					Select("b").From("table2"),
+				).As("t"),
+			},
+			want: "((SELECT a FROM table1) UNION ALL (SELECT b FROM table2)) AS `t`",
+		},
+		{
+			query: "?",
+			value: []interface{}{time.Month(7)},
+			want:  "7",
+		},
+		{
+			query: "?",
+			value: []interface{}{(*int64)(nil)},
+			want:  "NULL",
+		},
+		{
+			query: "???? ? ?? ? ??",
+			value: []interface{}{1, 2},
+			want:  "?? 1 ? 2 ?",
+		},
+		{
+			query: "???",
+			value: []interface{}{1},
+			want:  "?1",
+		},
+	} {
+		s, err := InterpolateForDialect(test.query, test.value, dialect.ClickHouse)
+		require.NoError(t, err)
+		require.Equal(t, test.want, s)
+	}
+}
+
 
 // Attempts to test common SQL injection strings. See `InjectionAttempts` for
 // more information on the source and the strings themselves.
