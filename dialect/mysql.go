@@ -61,6 +61,14 @@ func (d mysql) EncodeBytes(b []byte) string {
 	return fmt.Sprintf(`0x%x`, b)
 }
 
+func (d mysql) EncodeArrayBegin() string {
+	return "("
+}
+
+func (d mysql) EncodeArrayEnd() string {
+	return ")"
+}
+
 func (d mysql) Placeholder(_ int) string {
 	return "?"
 }
