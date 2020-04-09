@@ -8,7 +8,7 @@ import (
 
 // clickhouse dialect is based on mysql dialect, but using
 // [...] to represent array instead of (...).
-type clickhouse mysql
+type clickhouse struct{}
 
 func (d clickhouse) QuoteIdent(s string) string {
 	return quoteIdent(s, "`")
